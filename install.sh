@@ -272,7 +272,7 @@ patch_asar() {
     # Build native modules in clean environment and copy back
     build_native_modules "$WORK_DIR/app-extracted"
 
-    info "Patching Linux window behavior..."
+    info "Patching Linux window and shell behavior..."
     node "$SCRIPT_DIR/scripts/patch-linux-window-ui.js" "$WORK_DIR/app-extracted"
 
     # Repack
