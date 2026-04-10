@@ -60,12 +60,19 @@ npm i -g --prefix ~/.local @openai/codex
 
 ### Ubuntu / Pop!_OS Note
 
-Ubuntu-family `p7zip-full` can be too old to extract newer APFS DMGs. If extraction fails, install a newer `7zz`:
+Ubuntu-family `p7zip-full` can be too old to extract newer APFS DMGs.
+Run `bash scripts/install-deps.sh` to install dependencies and bootstrap a newer `7zz`
+into `~/.local/bin` by default (set `SEVENZIP_SYSTEM_INSTALL=1` to use `/usr/local/bin` instead).
+
+To install it manually, use the current Linux tarball from
+https://www.7-zip.org/download.html:
 
 ```bash
-curl -L -o /tmp/7z.tar.xz https://www.7-zip.org/a/7z2409-linux-x64.tar.xz
-tar -C /tmp -xf /tmp/7z.tar.xz
-sudo install -m 755 /tmp/7zz /usr/local/bin/7zz
+# Replace <VERSION> with the current version number from the download page
+curl -L -o /tmp/7z.tar.xz "https://www.7-zip.org/a/7z<VERSION>-linux-x64.tar.xz"
+tar -C /tmp -xf /tmp/7z.tar.xz 7zz
+install -d -m 755 "$HOME/.local/bin"
+install -m 755 /tmp/7zz "$HOME/.local/bin/7zz"
 ```
 
 ### Fedora
