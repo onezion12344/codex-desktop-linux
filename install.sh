@@ -133,12 +133,15 @@ $(dependency_help)"
         SEVEN_ZIP_CMD="7z"
     fi
 
-    if "$SEVEN_ZIP_CMD" | head -n 1 | grep -q "16.02"; then
-        error "Your 7-zip is too old to open modern APFS DMGs.
-Install a newer 7-zip (7zz), e.g.:
-  curl -L -o /tmp/7z.tar.xz https://www.7-zip.org/a/7z2409-linux-x64.tar.xz
-  tar -C /tmp -xf /tmp/7z.tar.xz
-  sudo install -m 755 /tmp/7zz /usr/local/bin/7zz"
+    if "$SEVEN_ZIP_CMD" 2>&1 | grep -m 1 "7-Zip" | grep -q "16.02"; then
+        error "System 7-zip is too old for modern APFS DMGs.
+Install a newer 7zz first by running:
+  bash scripts/install-deps.sh
+
+That helper bootstraps a current 7zz into ~/.local/bin by default.
+If ~/.local/bin is not on your PATH, add it before re-running this script:
+  export PATH=\"$HOME/.local/bin:$PATH\"
+Set SEVENZIP_SYSTEM_INSTALL=1 to install into /usr/local/bin instead."
     fi
 
     info "All dependencies found (using $SEVEN_ZIP_CMD)"

@@ -8,6 +8,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
+ARCH="$(uname -m)"
 
 info()  { echo -e "${GREEN}[INFO]${NC}  $*"; }
 warn()  { echo -e "${YELLOW}[WARN]${NC}  $*"; }
@@ -69,6 +70,81 @@ install_pacman() {
 }
 
 # ---------------------------------------------------------------------------
+# 7zz bootstrap (modern 7-Zip for APFS DMG support)
+# Pinned versions — prepend new entries as upstream releases them.
+# ---------------------------------------------------------------------------
+bootstrap_7zz() {
+    # Already present and functional
+    if command -v 7zz &>/dev/null && 7zz 2>&1 | grep -qm 1 "7-Zip"; then
+        info "7zz already available ($(command -v 7zz))"
+        return 0
+    fi
+
+    # System 7z is already new enough — skip
+    if command -v 7z &>/dev/null && ! 7z 2>&1 | grep -m 1 "7-Zip" | grep -q "16.02"; then
+        info "System 7z is already new enough; skipping 7zz bootstrap"
+        return 0
+    fi
+
+    local sevenzip_arch
+    case "$ARCH" in
+        x86_64)  sevenzip_arch="x64"   ;;
+        aarch64) sevenzip_arch="arm64"  ;;
+        armv7l)  sevenzip_arch="arm"    ;;
+        *)
+            warn "Skipping 7zz bootstrap: unsupported architecture '$ARCH'"
+            return 0
+            ;;
+    esac
+
+    local install_dir="$HOME/.local/bin"
+    if [ "${SEVENZIP_SYSTEM_INSTALL:-0}" = "1" ]; then
+        install_dir="/usr/local/bin"
+    fi
+
+    # Try pinned versions newest-first with HEAD verification — no HTML parsing
+    local -a versions=(2600 2500 2409)
+    local version="" url="" candidate_url
+    for candidate in "${versions[@]}"; do
+        candidate_url="https://www.7-zip.org/a/7z${candidate}-linux-${sevenzip_arch}.tar.xz"
+        if curl -fsI "$candidate_url" >/dev/null 2>&1; then
+            version="$candidate"
+            url="$candidate_url"
+            break
+        fi
+    done
+
+    if [ -z "$url" ]; then
+        error "Could not find a known-good 7zz tarball for architecture '$ARCH'.
+Tried versions: ${versions[*]}
+Install 7zz manually from https://www.7-zip.org/download.html and ensure it is on your PATH."
+    fi
+
+    local tmpdir
+    tmpdir="$(mktemp -d)"
+    trap 'rm -rf "$tmpdir"' EXIT
+
+    info "Downloading 7zz ${version} from $url"
+    curl -fL --progress-bar -o "$tmpdir/7z.tar.xz" "$url"
+    tar -C "$tmpdir" -xf "$tmpdir/7z.tar.xz" 7zz
+
+    if [ "$install_dir" = "/usr/local/bin" ]; then
+        sudo install -d -m 755 "$install_dir"
+        sudo install -m 755 "$tmpdir/7zz" "$install_dir/7zz"
+    else
+        mkdir -p "$install_dir"
+        install -m 755 "$tmpdir/7zz" "$install_dir/7zz"
+    fi
+
+    info "Installed 7zz to $install_dir/7zz"
+
+    if ! printf '%s\n' "$PATH" | tr ':' '\n' | grep -Fxq "$install_dir"; then
+        warn "$install_dir is not on your PATH. Add it with:"
+        warn "  export PATH=\"$install_dir:\$PATH\""
+    fi
+}
+
+# ---------------------------------------------------------------------------
 # Rust / cargo (via rustup — distro-independent)
 # ---------------------------------------------------------------------------
 install_rust() {
@@ -117,5 +193,6 @@ case "$DISTRO" in
 esac
 
 install_rust
+bootstrap_7zz
 
 info "All dependencies installed. You can now run: ./install.sh"
