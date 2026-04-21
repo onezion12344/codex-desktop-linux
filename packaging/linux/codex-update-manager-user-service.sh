@@ -75,10 +75,10 @@ codex_cleanup_user_service() {
 }
 
 codex_cleanup_one_user_service() {
-    user_name="$1"
-    runtime_dir="$2"
-    bus="$3"
-    action="$4"
+    action="$1"
+    user_name="$2"
+    runtime_dir="$3"
+    bus="$4"
 
     codex_run_systemctl_user "$user_name" "$runtime_dir" "$bus" "$action" "$SERVICE_NAME" || true
     codex_run_systemctl_user "$user_name" "$runtime_dir" "$bus" daemon-reload || true
