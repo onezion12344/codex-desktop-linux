@@ -40,6 +40,9 @@ jobs:
           npm i -g --prefix "$HOME/.local" @openai/codex
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
+      - name: Build Codex app
+        run: make build-app
+
       - name: Build Debian package
         run: |
           set -euo pipefail
