@@ -1,0 +1,54 @@
+name: Build Debian package
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - main
+    paths:
+      - Cargo.toml
+      - Cargo.lock
+      - Makefile
+      - install.sh
+      - scripts/**
+      - packaging/**
+      - assets/**
+      - .github/workflows/build-deb.yml
+
+permissions:
+  contents: read
+
+jobs:
+  build-deb:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies
+        run: bash scripts/install-deps.sh
+
+      - name: Install Codex CLI
+        run: |
+          npm i -g --prefix "$HOME/.local" @openai/codex
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Build Debian package
+        run: |
+          set -euo pipefail
+          export PACKAGE_VERSION="$(date -u +%Y.%m.%d.%H%M%S)+${GITHUB_SHA::8}"
+          make deb
+
+      - name: Upload Debian package
+        uses: actions/upload-artifact@v4
+        with:
+          name: codex-desktop-deb
+          path: dist/*.deb
+          if-no-files-found: error
