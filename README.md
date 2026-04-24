@@ -230,6 +230,16 @@ Output:
 dist/codex-desktop_YYYY.MM.DD.HHMMSS_amd64.deb
 ```
 
+### Prebuilt Release
+
+If you just want the packaged Debian build from this fork, open the
+repository's GitHub Releases page and download the latest `.deb` asset.
+Once downloaded, install it with:
+
+```bash
+sudo apt install ./codex-desktop_*.deb
+```
+
 ### RPM
 
 Requires `codex-app/` to exist (run `make build-app` first).
