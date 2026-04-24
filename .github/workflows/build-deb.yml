@@ -1,0 +1,28 @@
+name: Build DEB
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install deps
+        run: bash scripts/install-deps.sh
+
+      - name: Install codex
+        run: npm i -g @openai/codex
+
+      - name: Build app
+        run: make build-app
+
+      - name: Build deb
+        run: make deb
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: codex-desktop.deb
+          path: "*.deb"
